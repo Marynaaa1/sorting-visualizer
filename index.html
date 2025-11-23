@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Візуалізація алгоритмів сортування</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+
+        .app {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 16px 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-size: 14px;
+        }
+
+        select, input[type="number"] {
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid #4b5563;
+            background: #020617;
+            color: #e5e7eb;
+        }
+
+        button {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        button:not(:disabled):hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        button:not(:disabled):active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+
+        #stepInfo {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .array-container {
+            margin-top: 24px;
+            height: 320px;
+            border-radius: 18px;
+            padding: 16px;
+            background: radial-gradient(circle at top, #1d283a 0, #020617 60%);
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .bar {
+            flex: 0 0 16px;
+            border-radius: 999px 999px 0 0;
+            background: linear-gradient(to top, #1d4ed8, #60a5fa);
+            position: relative;
+            transition: height 0.25s ease, transform 0.1s ease;
+        }
+
+        .bar span {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #9ca3af;
+        }
+
+        .bar.compare {
+            background: linear-gradient(to top, #eab308, #facc15);
+            transform: translateY(-4px);
+        }
+
+        .bar.swapped {
+            background: linear-gradient(to top, #b91c1c, #f97373);
+            transform: translateY(-6px);
+        }
+    </style>
+</head>
+<body onload="init()">
+<div class="app">
+    <h1>Візуалізація алгоритмів сортування</h1>
+
+    <div class="controls">
+        <label>
+            Алгоритм:
+            <select id="algorithm">
+                <option value="bubble">Bubble sort</option>
+                <option value="selection">Selection sort</option>
+                <option value="insertion">Insertion sort</option>
+            </select>
+        </label>
+
+        <label>
+            Кількість елементів:
+            <input id="size" type="number" min="5" max="50" value="10">
+        </label>
+
+        <button id="generateBtn">Згенерувати масив</button>
+    </div>
+
+    <div class="controls">
+        <button id="prevStepBtn">⏮ Попередній крок</button>
+        <button id="nextStepBtn">⏭ Наступний крок</button>
+        <span id="stepInfo">Крок: 0 / 0</span>
+    </div>
+
+    <div id="arrayContainer" class="array-container"></div>
+</div>
+
+<script>
+    function init() {
+        const arrayContainer = document.getElementById('arrayContainer');
+        const algorithmSelect = document.getElementById('algorithm');
+        const sizeInput = document.getElementById('size');
+        const generateBtn = document.getElementById('generateBtn');
+        const prevStepBtn = document.getElementById('prevStepBtn');
+        const nextStepBtn = document.getElementById('nextStepBtn');
+        const stepInfo = document.getElementById('stepInfo');
+
+        let currentArray = [];
+        let steps = [];
+        let currentStepIndex = 0;
+
+        function generateRandomArray(size) {
+            const arr = [];
+            for (let i = 0; i < size; i++) {
+                arr.push(Math.floor(Math.random() * 90) + 10);
+            }
+            return arr;
+        }
+
+        function cloneArray(arr) {
+            return arr.slice();
+        }
+
+        function bubbleSortSteps(arr) {
+            const a = cloneArray(arr);
+            const localSteps = [];
+            localSteps.push({ array: cloneArray(a), i: -1, j: -1, swapped: false });
+
+            const n = a.length;
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    localSteps.push({ array: cloneArray(a), i: j, j: j + 1, swapped: false });
+                    if (a[j] > a[j + 1]) {
+                        const tmp = a[j];
+                        a[j] = a[j + 1];
+                        a[j + 1] = tmp;
+                        localSteps.push({ array: cloneArray(a), i: j, j: j + 1, swapped: true });
+                    }
+                }
+            }
+            return localSteps;
+        }
+
+        function selectionSortSteps(arr) {
+            const a = cloneArray(arr);
+            const localSteps = [];
+            localSteps.push({ array: cloneArray(a), i: -1, j: -1, swapped: false });
+
+            const n = a.length;
+            for (let i = 0; i < n - 1; i++) {
+                let minIndex = i;
+                for (let j = i + 1; j < n; j++) {
+                    localSteps.push({ array: cloneArray(a), i: minIndex, j, swapped: false });
+                    if (a[j] < a[minIndex]) {
+                        minIndex = j;
+                        localSteps.push({ array: cloneArray(a), i: minIndex, j, swapped: false });
+                    }
+                }
+                if (minIndex !== i) {
+                    const tmp = a[i];
+                    a[i] = a[minIndex];
+                    a[minIndex] = tmp;
+                    localSteps.push({ array: cloneArray(a), i, j: minIndex, swapped: true });
+                }
+            }
+            return localSteps;
+        }
+
+        function insertionSortSteps(arr) {
+            const a = cloneArray(arr);
+            const localSteps = [];
+            localSteps.push({ array: cloneArray(a), i: -1, j: -1, swapped: false });
+
+            const n = a.length;
+            for (let i = 1; i < n; i++) {
+                let key = a[i];
+                let j = i - 1;
+
+                localSteps.push({ array: cloneArray(a), i, j, swapped: false });
+
+                while (j >= 0 && a[j] > key) {
+                    localSteps.push({ array: cloneArray(a), i: j, j: j + 1, swapped: false });
+                    a[j + 1] = a[j];
+                    j--;
+                    localSteps.push({ array: cloneArray(a), i: j, j: j + 1, swapped: true });
+                }
+                a[j + 1] = key;
+                localSteps.push({ array: cloneArray(a), i: j + 1, j: i, swapped: true });
+            }
+            return localSteps;
+        }
+
+        function renderStep(step) {
+            arrayContainer.innerHTML = '';
+            const maxValue = Math.max(...step.array);
+
+            step.array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.classList.add('bar');
+
+                const heightPercent = (value / maxValue) * 90;
+                bar.style.height = heightPercent + '%';
+
+                if (index === step.i || index === step.j) {
+                    bar.classList.add('compare');
+                }
+                if (step.swapped && (index === step.i || index === step.j)) {
+                    bar.classList.add('swapped');
+                }
+
+                const label = document.createElement('span');
+                label.textContent = value;
+                bar.appendChild(label);
+
+                arrayContainer.appendChild(bar);
+            });
+
+            stepInfo.textContent = `Крок: ${currentStepIndex + 1} / ${steps.length}`;
+            updateButtonsState();
+        }
+
+        function updateButtonsState() {
+            prevStepBtn.disabled = currentStepIndex <= 0;
+            nextStepBtn.disabled = currentStepIndex >= steps.length - 1 || steps.length === 0;
+        }
+
+        function recalcSteps() {
+            const algorithm = algorithmSelect.value;
+            if (!currentArray.length) return;
+
+            if (algorithm === 'bubble') {
+                steps = bubbleSortSteps(currentArray);
+            } else if (algorithm === 'selection') {
+                steps = selectionSortSteps(currentArray);
+            } else if (algorithm === 'insertion') {
+                steps = insertionSortSteps(currentArray);
+            }
+
+            currentStepIndex = 0;
+            if (steps.length > 0) {
+                renderStep(steps[0]);
+            } else {
+                arrayContainer.innerHTML = '';
+                stepInfo.textContent = 'Крок: 0 / 0';
+            }
+        }
+
+        generateBtn.addEventListener('click', () => {
+            let size = parseInt(sizeInput.value, 10);
+            if (isNaN(size) || size < 5) size = 5;
+            if (size > 50) size = 50;
+
+            currentArray = generateRandomArray(size);
+            recalcSteps();
+        });
+
+        nextStepBtn.addEventListener('click', () => {
+            if (currentStepIndex < steps.length - 1) {
+                currentStepIndex++;
+                renderStep(steps[currentStepIndex]);
+            }
+        });
+
+        prevStepBtn.addEventListener('click', () => {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                renderStep(steps[currentStepIndex]);
+            }
+        });
+
+        algorithmSelect.addEventListener('change', recalcSteps);
+
+        // стартовий масив
+        let initialSize = parseInt(sizeInput.value, 10);
+        if (isNaN(initialSize) || initialSize < 5) initialSize = 10;
+        currentArray = generateRandomArray(initialSize);
+        recalcSteps();
+    }
+</script>
+</body>
+</html>
